@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sankmux_11.7 Terminal</title>
+    <style>
+        :root {
+            --term-color: #00ff00; 
+        }
+
+        body.pro-theme {
+            --term-color: #00e5ff; 
+        }
+
+        body {
+            background-color: #050505;
+            color: var(--term-color);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            text-shadow: 0 0 5px var(--term-color);
+            transition: all 0.5s ease; 
+        }
+
+        #terminal-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            transition: all 0.5s ease;
+        }
+
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            transition: font-size 0.5s ease;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+        }
+
+        .prompt {
+            color: var(--term-color);
+            margin-right: 10px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+
+        #command-input {
+            background: transparent;
+            border: none;
+            color: var(--term-color);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            flex-grow: 1;
+            outline: none;
+            text-shadow: 0 0 5px var(--term-color);
+            transition: all 0.5s ease;
+        }
+
+        #input-container {
+            display: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--term-color); 
+            transition: background 0.5s ease;
+        }
+
+        /* --- Mobile Layout Mode --- */
+        body.mobile-mode {
+            padding: 10px;
+        }
+        body.mobile-mode #terminal-container {
+            max-width: 400px;
+            height: 85vh;
+            border: 2px solid var(--term-color);
+            border-radius: 20px;
+            padding: 15px;
+            box-sizing: border-box;
+            box-shadow: 0 0 15px var(--term-color) inset;
+        }
+        body.mobile-mode #command-input, 
+        body.mobile-mode #output, 
+        body.mobile-mode .prompt {
+            font-size: 14px;
+        }
+
+        /* Adjusted CSS for giant ASCII Arts */
+        .giant-art {
+            white-space: pre;
+            font-size: 10px;
+            line-height: 10px;
+            overflow-x: hidden;
+            margin-bottom: 15px;
+        }
+        
+        body.mobile-mode .giant-art {
+            font-size: 5px; 
+            line-height: 5px;
+        }
+
+        /* For the Home Screen logos so they don't wrap and break */
+        .ascii-logo {
+            white-space: pre; 
+            font-size: 11px;
+            line-height: 12px;
+            overflow-x: hidden;
+        }
+
+        body.mobile-mode .ascii-logo {
+            font-size: 5px;
+            line-height: 6px;
+        }
+
+        /* Permanent Creator Watermark */
+        .watermark {
+            position: fixed;
+            bottom: 10px;
+            right: 15px;
+            font-size: 12px;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+
+        /* UI Action Buttons */
+        #btn-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .ui-btn {
+            background-color: #050505;
+            color: var(--term-color);
+            border: 1px solid var(--term-color);
+            padding: 8px 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 0 5px var(--term-color);
+            transition: all 0.3s ease;
+        }
+
+        .ui-btn:hover {
+            background-color: var(--term-color);
+            color: #050505;
+            box-shadow: 0 0 15px var(--term-color);
+        }
+
+        #exit-pro-btn {
+            display: none; 
+        }
+
+        body.pro-theme #exit-pro-btn {
+            display: block; 
+        }
+
+        @media (max-width: 600px) {
+            #btn-container {
+                flex-direction: column;
+                gap: 5px;
+                top: 10px;
+                right: 10px;
+            }
+            .ui-btn {
+                font-size: 10px;
+                padding: 5px 8px;
+            }
+        }
+
+        /* Extra Bright Rainbow Text Animation */
+        @keyframes rainbow {
+            0% { color: #FF0000; text-shadow: 0 0 8px #FF0000, 0 0 15px #FF0000; }
+            15% { color: #FF8000; text-shadow: 0 0 8px #FF8000, 0 0 15px #FF8000; }
+            30% { color: #FFFF00; text-shadow: 0 0 8px #FFFF00, 0 0 15px #FFFF00; }
+            45% { color: #00FF00; text-shadow: 0 0 8px #00FF00, 0 0 15px #00FF00; }
+            60% { color: #0000FF; text-shadow: 0 0 8px #0000FF, 0 0 15px #0000FF; }
+            75% { color: #4B0082; text-shadow: 0 0 8px #4B0082, 0 0 15px #4B0082; }
+            90% { color: #9400D3; text-shadow: 0 0 8px #9400D3, 0 0 15px #9400D3; }
+            100% { color: #FF0000; text-shadow: 0 0 8px #FF0000, 0 0 15px #FF0000; }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00e5ff, #0000ff, #8a2be2, #ff00ff, #ff0000);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow-slide 4s linear infinite;
+            text-shadow: none; 
+        }
+
+        @keyframes rainbow-slide {
+            to {
+                background-position: -200% center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="btn-container">
+        <button id="remove-pkg-btn" class="ui-btn">Remove Pkg</button>
+        <button id="remove-all-btn" class="ui-btn">Remove All</button>
+        <button id="exit-pro-btn" class="ui-btn">Exit Pro Mode</button>
+    </div>
+    
+    <div class="watermark">Made by Sanket Malviya</div>
+
+    <div id="terminal-container">
+        <div id="output"></div>
+        <div id="input-container" class="input-line">
+            <span id="prompt-text" class="prompt">root@Sankmux_11.7:~$</span>
+            <input type="text" id="command-input" autocomplete="off" autofocus>
+        </div>
+    </div>
+
+    <script>
+        const outputDiv = document.getElementById('output');
+        const inputContainer = document.getElementById('input-container');
+        const commandInput = document.getElementById('command-input');
+        const promptText = document.getElementById('prompt-text');
+        const exitProBtn = document.getElementById('exit-pro-btn');
+        const removePkgBtn = document.getElementById('remove-pkg-btn');
+        const removeAllBtn = document.getElementById('remove-all-btn');
+
+        // --- App Execution States ---
+        let inAppMode = false;
+        let inChatMode = false;
+        let currentApp = "";
+
+        // --- Standard Arts ---
+        const rainbowTitle = `  _________              __                              ____ ____   _________ 
+ /   _____/____    ____ |  | __ _____  __ _____  ___    /_   /_   |  \\______  \\
+ \\_____  \\\\__  \\  /    \\|  |/ //     \\|  |  \\  \\/  /     |   ||   |      /    /
+ /        \\/ __ \\|   |  \\    <|  Y Y  \\  |  />    <      |   ||   |     /    / 
+/_______  (____  /___|  /__|_ \\__|_|  /____//__/\\_ \\_____|___||___| /\\ /____/  
+        \\/     \\/     \\/     \\/     \\/            \\/_____/          \\/         `;
+
+        const versionTitle = `                          .__                   ____ ____   _________ 
+___  __ ___________  _____|__| ____   ____     /_   /_   |  \\______  \\
+\\  \\/ // __ \\_  __ \\/  ___/  |/  _ \\ /    \\     |   ||   |      /    /
+ \\   /\\  ___/|  | \\/\\___ \\|  (  <_> )   |  \\    |   ||   |     /    / 
+  \\_/  \\___  >__|  /____  >__|\\____/|___|  /____|___||___| /\\ /____/  
+           \\/           \\/               \\/_____/          \\/         `;
+
+        const homeScreenArt = `⣿⣿⣿⣿⣿⣿⡿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⠟⠡⠶⣎⠤⠤⠤⡸⣫⡝⠛⠏⠹⠩⠍⠫⢝⡶⢄⡈⠙⣿⣿⣿
+⣿⣿⣿⡏⠀⠀⠊⠀⠀⠀⠀⠀⠑⠂⠓⠁⠀⠀⠀⠀⠀⠈⠚⠄⡄⢸⣿⣿
+⣿⡿⠋⡀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠀⢻⣿
+⡿⠁⡜⠀⠉⠐⠀⠀⠀⠀⠀⢠⣤⣾⣿⣅⣤⠀⠀⠀⣀⠤⠒⠓⠲⡄⠊⢿
+⡇⢰⠀⠀⠀⠀⠀⣀⡐⠒⠀⠒⠈⠻⠟⠃⠀⠂⠀⢀⡀⡄⠀⠀⠀⠘⡔⢸
+⣿⡌⢆⠀⠀⠀⠀⠀⡙⠺⣶⣤⣾⣶⢠⣿⣦⣿⣏⠏⡁⠀⠀⠀⠀⢀⠇⣼
+⣿⣿⣮⡑⠠⡀⠀⠀⠀⠁⠀⠀⠄⠰⠐⠄⠲⠈⠀⠀⠀⠀⠀⡀⠀⠬⣳⣿
+⣿⣿⣿⣷⡄⠐⠑⢆⡄⠀⠁⠰⠤⣤⢠⢠⢀⡤⠊⠀⠀⣠⠄⠀⢠⣼⣿⣿
+⣿⣿⣿⣿⣿⣆⠑⢄⢘⡆⢠⢠⢠⣤⣤⣤⣤⢠⠆⢢⡿⡇⠀⣰⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣇⠐⡷⡘⣄⠀⠘⠿⠘⠛⠙⠀⡰⢞⡤⢀⣼⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣷⡉⣷⢙⢦⣀⣀⣀⣀⣀⡔⢣⠏⢀⣾⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⠿⣵⡿⠿⠛⠛⣓⣷⠎⠊⣾⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣙⣿⣷⣶⣿⣿⠋⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣯⣭⣿⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿`;
+
+        // =========================================================================
+        // PASTE YOUR GIANT BRAILLE ARTS HERE:
+        // =========================================================================
+        const hackerArt = `[⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠤⢤⣄⣛⠩⠍⠉⠍⠉⠠⠀⠁⠉⠡⠄⠀⠉⠉⠉⠁⢒⠢⠤⠤⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡠⢴⡺⠭⠝⠒⠈⠉⠀⠀⢀⣀⣀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣀⣀⣀⣀⠀⠀⠁⠀⠀⠀⠉⣑⠢⠤⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠤⣖⠿⠓⠉⠀⢀⣀⣤⣴⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣤⣤⣀⡀⠉⠐⠠⢍⡒⠢⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⣪⠵⠊⠉⢀⣠⣴⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣤⣀⠈⠑⠢⢍⠒⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡰⣩⠗⠊⢀⣠⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣤⡀⠉⠂⠌⠣⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⡚⠵⠃⢀⣤⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠋⠉⠉⣴⣿⣿⣿⣿⣿⡿⠋⠀⣿⣿⣿⣿⣿⠀⠙⢿⣿⣿⣿⣿⣿⣄⠉⠉⠛⠻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀⠀⠢⠙⠢⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⢫⠚⠁⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠁⠀⠀⠀⠀⣰⣾⣿⣿⣿⣿⡿⠋⠀⠀⠀⣿⣿⣿⣿⣿⠀⠀⠀⠙⢿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠉⠛⠿⣿⣿⣿⣿⣿⣿⣿⣷⣤⡀⠐⠭⡃⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡐⡩⠊⢀⣤⣾⣿⣿⣿⣿⣿⣿⣿⡟⠋⠀⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣧⡀⠀⠀⠀⠀⠀⠈⠙⢿⣿⣿⣿⣿⣿⣿⣿⣦⣀⠉⠀⠙⢤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡤⣣⠞⠀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣾⣷⣿⣾⣷⣿⣾⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣾⣿⣿⣾⣷⣿⣿⣿⣿⣿⣿⣿⣿⣾⣷⣿⣾⣷⣿⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠈⢢⡱⣄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣠⢋⠜⠁⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⡀⠐⢈⢣⡀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⢀⠔⡱⠃⢀⣾⣿⣿⣿⣿⣿⣿⠿⠛⠛⠛⠛⠛⠛⠛⠛⠛⢻⣿⣿⣿⣿⣿⣿⡿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⣿⣿⣿⣿⣿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⢿⣿⣿⣿⣿⣿⣿⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⢿⣿⣿⣿⣿⣿⣿⣄⠈⢣⡑⡄⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢠⢎⠞⠁⣰⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣿⣿⣿⣿⣿⣿⣦⠀⠱⡘⢆⠀⠀⠀⠀
+⠀⠀⠀⠀⢠⢫⠊⢀⣼⣿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢻⣿⣿⣿⣿⣿⣷⡀⠙⡄⢆⠀⠀⠀
+⠀⠀⠀⡰⡩⠃⢀⣾⣿⣿⣿⣿⣿⣿⣯⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣴⣿⣿⣿⣿⣿⣿⣦⣤⣴⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣿⣿⣿⣿⣿⣤⣤⣤⣤⣤⣤⣤⣤⣤⣦⣤⣤⣼⣿⣿⣿⣿⣿⣿⣦⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣿⣿⣿⣿⣿⣿⣷⡀⠘⡌⢦⠀⠀
+⠀⠀⡰⡱⠁⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀⠘⡌⣇⠀
+⢠⢜⠥⠃⠀⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠷⠀⠘⠜⢦
+⣿⠃⢀⣄⣀⣀⣀⣀⣠⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⣀⣠⡀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣄⣤⡀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⣠⠀⠘
+⣿⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡅⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⣏⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀
+⣯⠀⢨⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⣰⣶⣶⣾⣿⣿⣿⠉⠉⠉⠉⠉⢹⣿⣿⣿⣶⣶⣾⠀⠀⠀⠀⢰⣶⣶⣾⣿⣿⣿⠉⠋⠙⠉⠋⠙⠉⠋⠙⣷⣶⣶⡆⠀⠀⠀⣻⣿⣿⣿⣿⣿⡧⠀⠀⠀⠀⠀⢰⣶⣶⣾⣿⣿⣿⠉⠉⠉⠀⢰
+⡷⠀⢨⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢸⣿⣿⣿⣿⣿⣟⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠿⠿⠿⠆⠀⠀⠀⣻⣿⣿⣿⣿⣿⡗⠀⠀⢀⣀⣀⣸⣿⣿⣿⠿⠿⠿⠀⠀⠀⠀⢸
+⡟⠀⠰⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⣸⣿⣿⣿⣿⣿⡿⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣽⣿⣿⣿⣿⣿⣏⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⢸
+⡏⠀⢘⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣽⣿⣿⣿⣿⣿⣷⣶⣶⣾⣿⣿⣿⠛⠛⠛⠀⠀⠀⠀⠀⠀⠀⢸
+⣯⠀⢨⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢼⣿⣿⣿⣿⣿⣷⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣽⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸
+⣯⠀⠰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸
+⡤⠀⢘⣿⣿⣿⣿⣿⣿⠿⠿⠿⠿⠿⠿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⣸⣿⣿⣿⣿⣿⣿⠿⠿⠿⠿⠿⠿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢾⣿⣿⣿⣿⣿⣿⣿⣿⣯⣤⣤⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢨
+⣧⠀⢨⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢸⣿⣿⣿⣿⣿⡿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸
+⡷⠀⠰⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣻⣿⣿⣿⣿⣿⡿⠉⠉⢹⣿⣿⣿⣶⣶⣶⠀⠀⠀⠀⠀⠀⠀⢘
+⡝⠀⢘⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢹⣿⣿⣿⣿⣿⣷⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⠀⠀⠀⠀⣻⣿⣿⣿⣿⣿⣟⠀⠀⠸⣿⣿⣿⣿⣿⣿⣀⣀⣀⠀⠀⠀⠀⠀
+⣇⠀⢘⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢸⣿⣿⣿⣿⣿⣯⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡇⠀⠀⠀⣽⣿⣿⣿⣿⣿⣯⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢰
+⠧⠀⢘⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢹⣿⣿⣿⣿⣿⣟⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠘⠛⠛⢻⣿⣿⣿⣶⣶⣶⣶⣶⣶⣶⣶⣾⡟⠛⠛⠁⠀⠀⠀⣽⣿⣿⣿⣿⣿⡷⠀⠀⠀⠀⠀⠘⠛⠛⢻⣿⣿⣿⣶⣶⣶⠀⢸
+⡰⠀⠸⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⠇⠀⠀⠀⢹⣿⣿⣿⣿⣿⡿⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⡟⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣿⣿⣿⣿⠀⢸
+⣿⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸
+⠙⢹⣟⡇⠀⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡗⠀⡼⡹⠁
+⠀⠀⠹⡞⡄⠈⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⣰⣱⠃⠀
+⠀⠀⠀⠘⢛⣄⠈⢿⣿⣿⣿⣿⣿⣿⣯⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠙⣿⣿⣿⣿⣿⣿⡋⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠙⣿⣿⣿⣿⣿⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⢹⣿⣿⣿⣿⣿⣿⠋⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⢉⣿⣿⣿⣿⣿⣿⡟⠀⡰⣱⠃⠀⠀
+⠀⠀⠀⠀⠈⠻⣂⠀⠻⣿⣿⣿⣿⣿⣿⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⣿⣿⣿⣿⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣿⣿⣿⣿⣿⣿⡟⠀⣰⡵⠃⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠹⣷⡀⠙⣿⣿⣿⣿⣿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⣿⣿⣿⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⣿⣿⣿⣿⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⠏⠀⡼⡟⠁⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠈⢷⢂⠈⠻⣿⣿⣿⣿⣿⣿⣷⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣿⣿⣿⣿⣿⣿⡿⠃⢀⡾⠎⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠛⡳⡄⠘⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋⢀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⡢⡀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠿⠛⠟⠟⠿⠻⠿⣿⣿⣿⣿⣿⣿⠿⠿⠿⠿⠿⠿⠿⣿⣿⣿⣿⣿⠿⠿⠿⠿⠿⠿⢿⣿⣿⣿⣿⣿⡿⠿⠻⠟⠟⠻⠟⠿⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⠛⠀⣠⡿⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠳⡦⣀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣦⣀⠀⠀⠀⠀⠀⠈⠻⣿⣿⣿⣿⣷⣆⡀⠀⠀⠀⠀⣿⣿⣿⣿⣿⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⠟⠀⠀⠀⠀⠀⠀⣀⣴⣿⣿⣿⣿⣿⣿⣿⡿⠋⢀⣤⠾⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠸⡳⣄⠈⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣄⣀⠀⠀⠀⠈⢻⣿⣿⣿⣿⣷⣦⡀⠀⠀⣿⣿⣿⣿⣿⠀⠀⢀⣴⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⣀⣤⣶⣿⣿⣿⣿⣿⣿⣿⣿⠟⠋⢀⣰⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⠿⣢⡄⠈⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣤⣤⣙⣿⣿⣿⣿⣿⣿⣦⡀⣿⣿⣿⣿⣿⢀⣴⣿⣿⣿⣿⣿⣿⣃⣠⣤⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠋⢀⣠⠶⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠚⠵⡦⣄⠈⠙⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠟⠉⣀⣴⠞⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠚⠽⣲⠤⣀⠈⠙⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠛⠉⣀⡤⠶⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠚⠽⣲⡤⣄⣀⠈⠉⠛⠛⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠿⠛⠛⠉⢉⣀⣤⠴⠚⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠊⠛⠱⠶⠤⠄⣀⣀⣀⣀⠀⠉⠉⠉⠉⠉⠉⣉⠉⠉⣁⣀⣀⣀⡤⢠⠤⢔⡒⠊⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀]`;
+        const gigachadArt = `[⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠛⠛⠛⠋⠉⠈⠉⠉⠉⠉⠛⠻⢿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣿⡿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⢿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⡏⣀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⠀
+⣿⣿⣿⢏⣴⣿⣷⠀⠀⠀⠀⠀⢾⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠀⠈⣿⣿⠀
+⣿⣿⣟⣾⣿⡟⠁⠀⠀⠀⠀⠀⢀⣾⣿⣿⣿⣿⣿⣷⢢⠀⠀⠀⠀⠀⠀⠀⢸⣿⠀
+⣿⣿⣿⣿⣟⠀⡴⠄⠀⠀⠀⠀⠀⠀⠙⠻⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⣿⠀
+⣿⣿⣿⠟⠻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠶⢴⣿⣿⣿⣿⣿⣧⠀⠀⠀⠀⠀⠀⣿⠀
+⣿⣁⡀⠀⠀⢰⢠⣦⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⣿⣿⣿⣿⣿⡄⠀⣴⣶⣿⡄⣿⠀
+⣿⡋⠀⠀⠀⠎⢸⣿⡆⠀⠀⠀⠀⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⠗⢘⣿⣟⠛⠿⣼⠀
+⣿⣿⠋⢀⡌⢰⣿⡿⢿⡀⠀⠀⠀⠀⠀⠙⠿⣿⣿⣿⣿⣿⡇⠀⢸⣿⣿⣧⢀⣼⠀
+⣿⣿⣷⢻⠄⠘⠛⠋⠛⠃⠀⠀⠀⠀⠀⢿⣧⠈⠉⠙⠛⠋⠀⠀⠀⣿⣿⣿⣿⣿⠀
+⣿⣿⣧⠀⠈⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠟⠀⠀⠀⠀⢀⢃⠀⠀⢸⣿⣿⣿⣿⠀
+⣿⣿⡿⠀⠴⢗⣠⣤⣴⡶⠶⠖⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡸⠀⣿⣿⣿⣿⠀
+⣿⣿⣿⡀⢠⣾⣿⠏⠀⠠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠛⠉⠀⣿⣿⣿⣿⠀
+⣿⣿⣿⣧⠈⢹⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⡄⠈⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣴⣾⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣧⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣷⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣿⣦⣄⣀⣀⣀⣀⠀⠀⠀⠀⠘⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⠀⠀⠙⣿⣿⡟⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⠁⠀⠀⠹⣿⠃⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⢐⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⣿⣿⣿⣿⠿⠛⠉⠉⠁⠀⢻⣿⡇⠀⠀⠀⠀⠀⠀⢀⠈⣿⣿⡿⠉⠛⠛⠛⠉⠉⠀
+⣿⡿⠋⠁⠀⠀⢀⣀⣠⡴⣸⣿⣇⡄⠀⠀⠀⠀⢀⡿⠄⠙⠛⠀⣀⣠⣤⣤⠄⠀⠀]`;
+        const sigmaArt = `[⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⠤⠀⠒⠀⠈⠉⠉⢉⠉⡙⠛⠒⠒⠦⢄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡴⠖⠋⢁⣠⠤⠀⠀⠀⠂⠁⡈⢀⠐⠠⠐⢈⠐⡀⠂⠄⡉⠑⠶⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⠔⠉⠀⢀⡤⠚⠉⠀⠀⠀⠀⠁⠀⠂⠀⠄⠂⢁⠈⠄⠂⠄⡁⠂⠄⡁⠆⡠⢙⠳⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⠋⠀⠀⠀⠰⠃⠀⠀⠀⠀⢲⠀⠀⠀⠂⠀⢁⠠⠈⢀⠂⠌⠐⠠⢀⠁⡂⠐⡄⠱⢌⠲⣡⢛⡶⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⡴⢫⠇⠀⠀⠀⠀⠀⠀⠀⢀⣠⡇⠀⠃⣄⠀⠀⠈⠀⡀⠐⠠⠀⠌⠠⢁⠂⡐⠠⠁⠄⡃⢎⡱⣌⠳⡼⣹⢷⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢠⠎⡰⠃⠀⠀⠀⠀⣀⣠⣴⣾⡿⠟⠁⠀⠀⠻⣿⣷⣶⣥⣤⣐⣤⣁⣂⣡⣀⡂⠄⠡⢈⠐⢌⠂⡵⢌⡳⣍⡳⣏⢿⣆⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⡰⢃⡜⠁⠠⠒⠚⠛⠛⠉⠉⠁⠀⠀⢰⠖⠀⠀⠀⠀⠈⠉⠉⠉⠉⢉⠉⡉⠁⠄⡈⠄⡁⠂⠌⣀⠳⡄⢇⡳⡜⡵⣫⠾⡽⣷⡀⠀⠀⠀⠀⠀
+⠀⠀⠀⣰⠇⢸⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡞⠀⠀⠀⠀⠀⢀⠀⠄⠂⠐⠈⠠⠁⠂⠄⠡⢀⠁⠂⠄⡉⠄⢳⡈⢧⢳⡱⢏⡶⣳⢻⣧⠀⠀⠀⠀⠀
+⠀⠀⢠⠇⢀⠇⡀⠀⠀⠀⠀⠀⣀⣤⣴⣶⣿⣿⡇⠀⠀⠀⠀⠀⢺⡟⠛⡛⠛⠛⠟⠻⠿⣷⣶⣦⣬⣁⣂⠘⣌⠶⣍⡒⢧⣙⢮⢳⣭⣛⢾⣧⠀⠀⠀⠀
+⠀⠀⡎⠀⢸⠀⢃⣀⣤⠴⠚⠉⣉⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠐⢀⣇⠀⣷⠀⠀⠀⣦⣼⣿⣿⣿⣿⠙⢿⣻⣼⣽⣽⢈⠷⣘⢎⡗⣲⡹⢮⡽⡆⠀⠀⠀
+⠀⢸⠁⢀⠘⣴⣿⠉⣛⣀⣀⣀⣹⣿⣿⣿⣹⣿⠀⠀⢀⠀⠁⡀⠂⣿⡀⠘⢆⣀⣀⣈⣻⣿⣿⣿⣃⠀⠠⠈⣹⣿⣿⠌⣎⠵⣪⠼⣡⢛⠦⡝⣿⡀⠀⠀
+⠀⡏⠀⠄⡀⠋⠉⠉⠁⠀⠀⠀⠀⠀⠀⠈⠛⠛⠀⠀⡀⠀⠂⠀⠴⠿⠉⠍⠩⠉⠍⡉⢉⠉⡉⢉⠉⡉⢉⠛⠛⠻⢿⡜⢤⠛⣔⢫⠖⡭⢚⡱⣽⡇⠀⠀
+⠀⡇⡈⠄⠐⠈⡀⠂⠐⠀⠂⠐⠀⠂⠈⠀⠄⠀⡐⠀⡀⠂⢁⠈⠠⠀⠌⠠⢁⠈⠄⡀⢂⠐⡀⢂⠐⡀⠂⠌⠌⡅⢊⠝⡢⠝⣬⠓⢮⡑⢣⠕⡮⡇⠀⠀
+⢀⡇⠐⡈⠠⢁⠠⢈⠀⠡⠈⡀⠌⠀⡁⠐⡀⠁⡀⠐⢀⠐⡀⠌⢀⠡⠈⡐⠠⢈⠐⡀⢂⠐⡈⠄⡉⠄⠡⡈⠰⢈⢆⢩⠒⡍⠶⡙⢦⠙⡢⠝⣜⣷⠀⠀
+⢰⡇⠡⢀⠡⢀⠂⠄⡈⠐⠠⠀⠄⡁⢀⠂⠄⠂⠠⣁⠂⠠⢀⠂⠄⠂⡁⠐⡀⢂⠐⡀⢂⠐⡀⢂⠐⡈⠡⢀⠣⠌⡌⢢⠝⣌⠳⣉⠦⣙⠰⣩⢲⡇⠀⠀
+⠀⣇⠂⠄⠂⠄⡈⠐⠠⢁⠂⢁⣂⣤⣤⣤⣀⡤⠦⢤⣝⢣⡀⠂⠌⡐⠠⢁⠐⡀⢂⠐⡀⢂⠐⠠⠂⡄⢃⠂⣅⡚⣌⢣⠞⣔⣋⠖⡑⢆⡃⢆⣳⡇⠀⠀
+⠀⢸⡎⠠⡁⠂⠄⡁⠂⠄⣼⣋⣤⡀⡀⠀⣀⣀⣠⣀⠈⠳⣷⡈⠐⠠⢁⠂⡐⢀⠂⡐⢀⠂⣌⡰⣡⠜⣌⠳⣄⠳⣌⠖⣍⢲⡘⢬⡑⢢⠘⡬⣾⠁⠀⠀
+⠀⠈⣷⡐⠤⡉⢂⠤⢁⠌⢿⡘⠛⠛⠛⢉⠛⠹⠛⠋⠷⢦⠹⢷⠈⡐⢀⠂⡐⢀⢂⡴⣊⠞⡴⣓⠴⣩⠒⡵⣈⠗⡬⡚⣌⠲⣉⢆⡘⠄⣃⢶⠇⠀⠀⠀
+⠀⠀⠘⣗⡢⠍⡜⠤⣉⠦⡜⢿⣶⣶⣶⣦⣶⣶⣾⡴⢢⠍⣧⠀⠡⠐⡀⢂⡴⣋⠾⣔⡫⣝⠲⣍⢞⡡⢫⠴⣉⠞⡰⢩⠆⡓⢄⠢⠐⠌⠤⡟⠀⠀⡄⢀
+⠀⠀⠀⠹⣧⡙⣌⠳⡌⢎⡙⠦⣉⠏⠻⡙⢏⠛⠥⢋⠇⠚⡘⠠⢁⠂⡐⣧⠞⣭⡓⢮⡱⢎⠳⡜⡌⢖⡱⢊⣴⠛⢻⡇⠘⡐⢀⠂⠡⢈⡾⠀⠀⢠⠃⢸
+⠀⠀⠀⠀⠘⣷⡌⢳⡸⣌⢱⢣⡐⢌⠱⠈⡄⠨⠐⠠⠈⠥⢀⢁⠢⢐⡹⣜⡻⢦⡙⢧⠱⡍⢣⠱⢜⠢⡱⢹⣿⠀⢠⣇⠡⠐⠠⠈⢄⡟⠁⠀⢀⠎⢠⠇
+⠀⠀⠀⠀⠀⠈⢻⣥⠲⡜⣊⢦⠱⡈⢆⡱⢀⢃⠩⡐⢡⠂⡅⢂⠆⡡⣟⡼⣓⢧⡹⣌⡓⣌⢣⡙⠢⢃⠔⡩⣿⠀⠀⢿⠀⡁⢂⣡⠋⠀⢀⡴⠃⣠⠏⠀
+⠀⠀⠀⠀⠀⠀⠀⠙⢷⡘⢤⠋⢖⠡⢂⠔⣈⢂⠑⡈⢆⠒⡘⡄⢚⠰⣹⡚⡵⣊⡕⢢⡑⢂⠆⡌⠡⢂⠐⠠⢹⠀⠀⠘⣆⣰⠞⠁⠠⠔⠉⣠⠖⠁⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣌⠒⠌⠂⠌⠠⠉⠌⡐⠡⠌⡰⠡⠑⡌⠢⢍⡳⢥⢋⠕⡊⠱⠈⠄⡁⠂⠌⡐⠠⠘⡆⠀⠀⣿⠋⠀⠀⢀⡠⠔⠋⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⢮⣄⠡⠁⠌⡐⠠⢁⠂⠄⠡⢁⠰⢁⠊⠌⡑⠊⢄⠁⡂⢱⡏⠙⢳⣤⠴⠒⠋⠉⠉⠑⠚⠦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⠣⢆⡄⡁⠂⠌⠠⢁⠂⡐⠠⢈⠐⠠⢁⠂⡐⠠⠉⠳⣄⣺⡀⠀⢀⣀⡤⠤⠤⣀⣀⠈⢣⡀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⣶⣬⣐⣀⠂⠀⠁⠂⠈⠀⠀⣀⣀⣀⣤⣴⣿⣿⣿⣿⠟⡇⠀⠀⠀⠀⠀⠀⠀⣳⡀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠛⠛⠛⠛⠛⠛⠛⠉⠋⠉⠁⠀⠀⠙⢻⡏⢈⢙⡶⠖⠒⠋⠉⠉⠉⠹⣷⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣇⣼⡞⠠⣀⡀⠀⠀⠀⠀⣰⣿⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠿⣇⠦⣠⣿⣶⢦⠤⢀⣿⠏⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⣿⣿⣇⣤⡶⠟⠉⠀⠀⠀⠀⠀⠀⠀]`;
+        const secretGppArt = `[⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⣤⣤⣶⠶⠶⠶⠶⠶⠶⠶⢖⣦⣤⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡴⠞⠛⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠛⠻⠶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⠞⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⢶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠾⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⣆⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⣠⡞⠁⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠈⠹⣦⡀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢀⣼⠋⠀⠀⠀⢀⣤⣾⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣠⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣷⣦⣀⠀⠀⠀⠈⢿⣄⠀⠀⠀⠀⠀
+⠀⠀⠀⢀⡾⠁⠀⣠⡾⢁⣾⡿⡋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣻⠏⠋⠉⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢿⣿⣆⠹⣦⠀⠀⢻⣆⠀⠀⠀⠀
+⠀⠀⢀⡾⠁⢀⢰⣿⠃⠾⢋⡔⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⢘⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡌⠻⠆⢿⣧⢀⠀⢻⣆⠀⠀⠀
+⠀⠀⣾⠁⢠⡆⢸⡟⣠⣶⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣷⣻⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⣦⡸⣿⠀⣆⠀⢿⡄⠀⠀
+⠀⢸⡇⠀⣽⡇⢸⣿⠟⢡⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⡇⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢤⠙⢿⣿⠀⣿⡀⠘⣿⠀⠀
+⡀⣿⠁⠀⣿⡇⠘⣡⣾⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢷⣦⡙⠀⣿⡇⠀⢻⡇⠀
+⢸⡟⠀⡄⢻⣧⣾⡿⢋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣿⣴⣿⠉⡄⢸⣿⠀
+⢾⡇⢰⣧⠸⣿⡏⢠⡎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠀⠓⢶⠶⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣆⠙⣿⡟⢰⡧⠀⣿⠀
+⣸⡇⠰⣿⡆⠹⣠⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⣤⣤⣶⣿⡏⠀⠠⢺⠢⠀⠀⣿⣷⣤⣄⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣧⠸⠁⣾⡇⠀⣿⠀
+⣿⡇⠀⢻⣷⠀⣿⡿⠰⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⡅⠀⠀⢸⡄⠀⠀⣿⣿⣿⣿⣿⣿⣶⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⡆⣰⣿⠁⠀⣿⠀
+⢸⣧⠀⡈⢿⣷⣿⠃⣰⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⡇⠀⠀⣿⣇⠀⢀⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣸⡀⢿⣧⣿⠃⡀⢸⣿⠀
+⠀⣿⡀⢷⣄⠹⣿⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⣿⣿⠀⣼⣿⣿⣿⣿⣿⣿⣿⡯⠀⠀⠀⠀⠀⠀⠀⠀⣿⡇⢸⡟⢁⣴⠇⣼⡇⠀
+⠀⢸⡇⠘⣿⣷⡈⢰⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⣿⣿⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⢰⣿⡧⠈⣴⣿⠏⢠⣿⠀⠀
+⠀⠀⢿⡄⠘⢿⣿⣦⣿⣯⠘⣆⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡀⠀⠀⠀⠀⠀⡎⢸⣿⣣⣾⡿⠏⠀⣾⠇⠀⠀
+⠀⠀⠈⢷⡀⢦⣌⠛⠿⣿⡀⢿⣆⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢀⣿⡁⣼⡿⠟⣉⣴⠂⣼⠏⠀⠀⠀
+⠀⠀⠀⠈⢷⡈⠻⣿⣶⣤⡁⠸⣿⣆⠡⡀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⢀⣾⡟⠀⣡⣴⣾⡿⠁⣴⠏⠀⠀⠀⠀
+⠀⠀⠀⠀⠈⢿⣄⠈⢙⠿⢿⣷⣼⣿⣦⠹⣶⣽⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⢡⣾⣿⣶⣿⠿⢛⠉⢀⣾⠏⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠹⣧⡀⠳⣦⣌⣉⣙⠛⠃⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠐⠛⠋⣉⣉⣤⡶⠁⣰⡿⠁⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠙⠛⠿⠿⠿⠿⠟⠛⠛⣹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⠙⠟⠛⠿⠿⠿⠿⠟⠛⠁⣠⡾⠋⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⢶⣄⠙⠶⣦⣤⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣦⣤⡶⠖⣁⣴⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠻⣶⣄⡉⠉⠉⠉⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠉⠉⠉⠉⣡⣴⡾⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠷⢦⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣠⣴⠶⠟⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠛⠛⠿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠛⠋⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀]`;
+        // =========================================================================
+
+        // --- ASCII Art Generator Font ---
+        const asciiFont = {
+            'A': ["  A  ", " A A ", "AAAAA", "A   A", "A   A"],
+            'B': ["BBBB ", "B   B", "BBBB ", "B   B", "BBBB "],
+            'C': [" CCC ", "C    ", "C    ", "C    ", " CCC "],
+            'D': ["DDDD ", "D   D", "D   D", "D   D", "DDDD "],
+            'E': ["EEEEE", "E    ", "EEEE ", "E    ", "EEEEE"],
+            'F': ["FFFFF", "F    ", "FFFF ", "F    ", "F    "],
+            'G': [" GGG ", "G    ", "G  GG", "G   G", " GGG "],
+            'H': ["H   H", "H   H", "HHHHH", "H   H", "H   H"],
+            'I': [" III ", "  I  ", "  I  ", "  I  ", " III "],
+            'J': ["    J", "    J", "    J", "J   J", " JJJ "],
+            'K': ["K   K", "K  K ", "KKK  ", "K  K ", "K   K"],
+            'L': ["L    ", "L    ", "L    ", "L    ", "LLLLL"],
+            'M': ["M   M", "MM MM", "M M M", "M   M", "M   M"],
+            'N': ["N   N", "NN  N", "N N N", "N  NN", "N   N"],
+            'O': [" OOO ", "O   O", "O   O", "O   O", " OOO "],
+            'P': ["PPPP ", "P   P", "PPPP ", "P    ", "P    "],
+            'Q': [" QQQ ", "Q   Q", "Q   Q", "Q  QQ", " QQQQ"],
+            'R': ["RRRR ", "R   R", "RRRR ", "R  R ", "R   R"],
+            'S': [" SSSS", "S    ", " SSS ", "    S", "SSSS "],
+            'T': ["TTTTT", "  T  ", "  T  ", "  T  ", "  T  "],
+            'U': ["U   U", "U   U", "U   U", "U   U", " UUU "],
+            'V': ["V   V", "V   V", "V   V", " V V ", "  V  "],
+            'W': ["W   W", "W   W", "W W W", "WW WW", "W   W"],
+            'X': ["X   X", " X X ", "  X  ", " X X ", "X   X"],
+            'Y': ["Y   Y", " Y Y ", "  Y  ", "  Y  ", "  Y  "],
+            'Z': ["ZZZZZ", "   Z ", "  Z  ", " Z   ", "ZZZZZ"],
+            '.': ["     ", "     ", "     ", "     ", "  .  "],
+            '-': ["     ", "     ", " --- ", "     ", "     "],
+            '+': ["     ", "  +  ", " +++ ", "  +  ", "     "],
+            ' ': ["     ", "     ", "     ", "     ", "     "]
+        };
+
+        function generateAscii(text) {
+            let lines = ["", "", "", "", ""];
+            text.toUpperCase().split('').forEach(char => {
+                let letter = asciiFont[char] || asciiFont[' '];
+                for (let i = 0; i < 5; i++) {
+                    lines[i] += letter[i] + "  ";
+                }
+            });
+            return lines.join("\n");
+        }
+
+        // --- Safe Package Storage System (Crash-Proof for Mobile) ---
+        const PKG_STORAGE_KEY = 'sankmux_installed_packages';
+        const THREE_DAYS_IN_MS = 3 * 24 * 60 * 60 * 1000;
+        let memoryFallbackStorage = []; 
+
+        function getInstalledPackages() {
+            try {
+                const storedData = localStorage.getItem(PKG_STORAGE_KEY);
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    if (Date.now() - parsedData.timestamp > THREE_DAYS_IN_MS) {
+                        localStorage.removeItem(PKG_STORAGE_KEY);
+                        return [];
+                    }
+                    return parsedData.pkgs;
+                }
+            } catch (e) {
+                return memoryFallbackStorage;
+            }
+            return [];
+        }
+
+        function savePackage(pkgName) {
+            const currentPkgs = getInstalledPackages();
+            if (!currentPkgs.includes(pkgName)) {
+                currentPkgs.push(pkgName);
+                try {
+                    localStorage.setItem(PKG_STORAGE_KEY, JSON.stringify({
+                        pkgs: currentPkgs,
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {
+                    memoryFallbackStorage = currentPkgs;
+                }
+            }
+        }
+
+        // --- Removal Logic ---
+        function removePkgLogic(pkgName) {
+            let pkgs = getInstalledPackages();
+            if (pkgs.includes(pkgName)) {
+                pkgs = pkgs.filter(p => p !== pkgName);
+                try {
+                    localStorage.setItem(PKG_STORAGE_KEY, JSON.stringify({
+                        pkgs: pkgs,
+                        timestamp: Date.now()
+                    }));
+                } catch(e) {
+                    memoryFallbackStorage = pkgs;
+                }
+                if (pkgName === 'sankmux.pro') {
+                    document.body.classList.remove('pro-theme');
+                }
+                printLine(`[SYSTEM] Package '${pkgName}' has been removed successfully.`);
+            } else {
+                printLine(`[ERROR] Package '${pkgName}' is not installed.`, "#ff4444");
+            }
+        }
+
+        function removeAllPkgsLogic() {
+            try {
+                localStorage.removeItem(PKG_STORAGE_KEY);
+            } catch(e) {}
+            memoryFallbackStorage = [];
+            document.body.classList.remove('pro-theme');
+            printLine(`[SYSTEM] Absolute purge protocol complete.`, "#ff4444");
+            printLine(`[SYSTEM] All packages have been wiped from the mainframe.`, "#ff4444");
+        }
+
+        // --- UI Button Event Listeners ---
+        exitProBtn.addEventListener('click', () => {
+            removePkgLogic('sankmux.pro');
+            printLine(`[SYSTEM] Pro Mode Deactivated. Returning to standard interface...`);
+            commandInput.focus();
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        });
+
+        removePkgBtn.addEventListener('click', () => {
+            const pkgName = prompt("Enter the exact name of the package to remove:");
+            if (pkgName) {
+                removePkgLogic(pkgName.trim().toLowerCase());
+                commandInput.focus();
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+            }
+        });
+
+        removeAllBtn.addEventListener('click', () => {
+            if (confirm("WARNING: Are you sure you want to completely wipe all installed packages?")) {
+                removeAllPkgsLogic();
+                commandInput.focus();
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+            }
+        });
+
+        // Theme Boot Check
+        try {
+            if (getInstalledPackages().includes('sankmux.pro')) {
+                document.body.classList.add('pro-theme');
+            }
+        } catch(e) {}
+
+        // --- Virtual File System (VFS) Setup ---
+        let currentPath = "~";
+        const directories = {
+            "~": ["readme.txt", "scripts", "payloads"],
+            "~/scripts": ["scan.sh", "decrypt.py"],
+            "~/payloads": ["trojan.bin"]
+        };
+        const fileContents = {
+            "~/readme.txt": "Welcome to the Sankmux_11.7 Subsystem.\nEnvironment built on simulated aarch64 architecture.\nUse 'pkg install' to add new modules.",
+            "~/scripts/scan.sh": "#!/bin/bash\necho 'Scanning subnets...'",
+            "~/scripts/decrypt.py": "import hashlib\nprint('Brute forcing hashes...')",
+            "~/payloads/trojan.bin": "[BINARY DATA CORRUPTED]"
+        };
+
+        const bootSequence = [
+            "Initializing Sankmux_11.7 Environment...",
+            "Loading Termux subsystem emulation.......[OK]",
+            "Mounting VFS (Virtual File System).......[OK]",
+            "Setting up package manager (pkg).........[OK]",
+            "Verifying local storage integrity........[OK]",
+            "Bypassing compiler sandbox constraints...[OK]",
+            " ",
+            "RAINBOW_TITLE_MARKER",
+            "VERSION_TITLE_MARKER",
+            " ",
+            "HOME_SCREEN_MARKER",
+            " ",
+            "Welcome to Sankmux_11.7",
+            "Made by Sanket Malviya",
+            "Type 'help' for commands.",
+            " "
+        ];
+
+        let lineIndex = 0;
+
+        function printBootSequence() {
+            if (lineIndex < bootSequence.length) {
+                let line = bootSequence[lineIndex];
+                
+                if (line === "RAINBOW_TITLE_MARKER") {
+                    printLine(rainbowTitle, "", "ascii-logo rainbow-text");
+                } else if (line === "VERSION_TITLE_MARKER") {
+                    printLine(versionTitle, "", "ascii-logo rainbow-text");
+                } else if (line === "HOME_SCREEN_MARKER") {
+                    printLine(homeScreenArt, "", "ascii-logo");
+                } else {
+                    printLine(line);
+                }
+                
+                lineIndex++;
+                setTimeout(printBootSequence, Math.random() * 200 + 50);
+            } else {
+                inputContainer.style.display = 'flex';
+                commandInput.focus();
+            }
+        }
+
+        function printLine(text, customColor = "", customClass = "") {
+            const p = document.createElement('div');
+            if (customColor) {
+                p.style.color = customColor;
+                p.style.textShadow = `0 0 5px ${customColor}`;
+            }
+            if (customClass) {
+                const classes = customClass.split(" ");
+                classes.forEach(c => {
+                    if(c) p.classList.add(c);
+                });
+            }
+            p.textContent = text;
+            outputDiv.appendChild(p);
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+
+        function updatePrompt() {
+            let displayPath = currentPath;
+            promptText.textContent = `root@Sankmux_11.7:${displayPath}$`;
+        }
+
+        printBootSequence();
+
+        commandInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const rawCmd = commandInput.value.trim();
+                if (rawCmd !== "") {
+                    // Chat Mode Intercept
+                    if (inChatMode) {
+                        if (rawCmd.toLowerCase() === '/exit' || rawCmd.toLowerCase() === 'exit' || rawCmd === '7') {
+                            inChatMode = false;
+                            outputDiv.innerHTML = ''; 
+                            printLine(`Disconnecting from Global Relay... Done.`);
+                            printLine(" ");
+                            printLine(rainbowTitle, "", "ascii-logo rainbow-text");
+                            printLine(versionTitle, "", "ascii-logo rainbow-text");
+                            printLine(" ");
+                            printLine(homeScreenArt, "", "ascii-logo"); 
+                            printLine(" ");
+                            printLine("Welcome back to Sankmux_11.7. Type 'help' for commands.");
+                            printLine("Made by Sanket Malviya");
+                            printLine(" ");
+                            promptText.style.display = 'inline'; 
+                        } else {
+                            const userLine = document.createElement('div');
+                            userLine.style.color = "var(--term-color)";
+                            userLine.style.textShadow = "0 0 5px var(--term-color)";
+                            userLine.innerHTML = `<span style="color: #00e5ff; text-shadow: 0 0 5px #00e5ff;">[Sanket]</span>: ${rawCmd}`;
+                            outputDiv.appendChild(userLine);
+                            
+                            if (Math.random() > 0.3) {
+                                setTimeout(() => {
+                                    if(!inChatMode) return;
+                                    const bots = ['Ghost', 'ZeroCool', 'AcidBurn', 'Neo', 'Cipher', 'Root'];
+                                    const replies = [
+                                        "Who is the new guy?",
+                                        "Tracing connection...",
+                                        "Sankmux is elite.",
+                                        "Make sure you install the gear package.",
+                                        "Don't trust the firewall.",
+                                        "I'm compiling payloads rn.",
+                                        "Anyone seen the Sigma art?",
+                                        "Affirmative."
+                                    ];
+                                    const bot = bots[Math.floor(Math.random() * bots.length)];
+                                    const reply = replies[Math.floor(Math.random() * replies.length)];
+                                    
+                                    const botLine = document.createElement('div');
+                                    botLine.style.color = "var(--term-color)";
+                                    botLine.style.textShadow = "0 0 5px var(--term-color)";
+                                    botLine.innerHTML = `<span style="color: #ff4444; text-shadow: 0 0 5px #ff4444;">[${bot}]</span>: ${reply}`;
+                                    outputDiv.appendChild(botLine);
+                                    outputDiv.scrollTop = outputDiv.scrollHeight;
+                                }, Math.random() * 2500 + 1000); 
+                            }
+                        }
+                    } 
+                    else {
+                        // Print the command to the screen
+                        const echoLine = document.createElement('div');
+                        if (!inAppMode) {
+                            // Normal terminal mode prompt
+                            echoLine.innerHTML = `<span class="prompt">${promptText.textContent}</span> ${rawCmd}`;
+                        } else {
+                            // Custom in-app mode prompt
+                            echoLine.innerHTML = `<span style="color: #ff00ff; text-shadow: 0 0 5px #ff00ff;">[${currentApp.toUpperCase()}]></span> ${rawCmd}`;
+                        }
+                        outputDiv.appendChild(echoLine);
+                        processCommand(rawCmd);
+                    }
+                }
+                commandInput.value = '';
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+            }
+        });
+
+        function processCommand(rawCmd) {
+            const args = rawCmd.split(/\s+/);
+            const cmd = args[0].toLowerCase();
+
+            // ==========================================
+            // NEW FEATURE: APP COMMAND INTERCEPT SYSTEM
+            // ==========================================
+            if (inAppMode) {
+                if (cmd === '7') {
+                    inAppMode = false;
+                    outputDiv.innerHTML = ''; 
+                    printLine(`Exiting ${currentApp}... Done.`);
+                    printLine(" ");
+                    printLine(rainbowTitle, "", "ascii-logo rainbow-text");
+                    printLine(versionTitle, "", "ascii-logo rainbow-text");
+                    printLine(" ");
+                    printLine(homeScreenArt, "", "ascii-logo"); 
+                    printLine(" ");
+                    printLine("Welcome back to Sankmux_11.7. Type 'help' for commands.");
+                    printLine("Made by Sanket Malviya");
+                    printLine(" ");
+                    promptText.style.display = 'inline'; 
+                    return;
+                }
+
+                const app = currentApp.toLowerCase();
+                
+                // Specific App Commands
+                if (cmd === 'help') {
+                    if (app === 'sanket gigachad') {
+                        printLine(`Available commands for GIGACHAD: flex, workout, rule1, 7 (exit)`);
+                    } else if (app === 'sanket sigma') {
+                        printLine(`Available commands for SIGMA: stare, quote, grind, 7 (exit)`);
+                    } else if (app === 'secret g++') {
+                        printLine(`Available commands for G++: compile, run, debug, 7 (exit)`);
+                    } else {
+                        printLine(`Available commands for ${currentApp}: ping, status, 7 (exit)`);
+                    }
+                } 
+                // Gigachad Commands
+                else if (app === 'sanket gigachad' && cmd === 'flex') {
+                    printLine(`[GIGACHAD] Muscles expanded by 200%. Server capacity maxed out.`, "#00e5ff");
+                } else if (app === 'sanket gigachad' && cmd === 'workout') {
+                    printLine(`[GIGACHAD] Lifting the mainframe database... Done.`, "#00ff00");
+                } else if (app === 'sanket gigachad' && cmd === 'rule1') {
+                    printLine(`[GIGACHAD] Rule 1: Never skip terminal leg day.`, "#ff00ff");
+                } 
+                // Sigma Commands
+                else if (app === 'sanket sigma' && cmd === 'stare') {
+                    printLine(`[SIGMA] Employing the Sigma Stare. Firewalls are intimidated and dropping.`, "#00e5ff");
+                } else if (app === 'sanket sigma' && cmd === 'quote') {
+                    printLine(`[SIGMA] "I don't bypass firewalls. Firewalls open for me."`, "#ffff00");
+                } else if (app === 'sanket sigma' && cmd === 'grind') {
+                    printLine(`[SIGMA] 100x multiplier activated on backend processing.`, "#00ff00");
+                } 
+                // G++ Commands
+                else if (app === 'secret g++' && cmd === 'compile') {
+                    printLine(`[G++] Compiling secret binary... 100%`, "#00ff00");
+                } else if (app === 'secret g++' && cmd === 'run') {
+                    printLine(`[G++] Execution successful. Hello, World!`, "#00e5ff");
+                } else if (app === 'secret g++' && cmd === 'debug') {
+                    printLine(`[G++] Segmentation fault (core dumped). Just kidding, you're a pro.`, "#ff4444");
+                } 
+                // Default App Commands
+                else if (cmd === 'ping') {
+                    printLine(`[${currentApp.toUpperCase()}] Connection stable. 12ms latency.`);
+                } else if (cmd === 'status') {
+                    printLine(`[${currentApp.toUpperCase()}] All systems operational and listening.`);
+                } else {
+                    printLine(`[${currentApp.toUpperCase()}] Invalid command. Type 'help' for app commands, or 7 to exit.`, "#ff4444");
+                }
+                return;
+            }
+
+            switch(cmd) {
+                case 'help':
+                    printLine("Sankmux Termux-Emulator Commands:");
+                    printLine("  ls                 : List directory contents");
+                    printLine("  cd                 : Change directory (e.g., 'cd scripts')");
+                    printLine("  pwd                : Print working directory");
+                    printLine("  cat                : View file contents (e.g., 'cat readme.txt')");
+                    printLine("  pkg                : Package manager (e.g., 'pkg install nmap')");
+                    printLine("  pkg remove <name>  : Uninstall a specific package");
+                    printLine("  pkg open <name>    : Launch a specific installed package");
+                    printLine("  check all pkgs     : View all installed packages");
+                    printLine("  remove all pkgs    : Delete every installed package");
+                    printLine("  crazy              : View secret crazy packages directory");
+                    printLine("  chat               : Enter the global hacker chat network");
+                    printLine("  5                  : Launch the most recently downloaded package");
+                    printLine("  7                  : Exit the currently running package");
+                    printLine("  set to mobile      : Switch to phone layout");
+                    printLine("  set to laptop      : Switch to default layout");
+                    printLine("  clear              : Clear terminal output");
+                    break;
+                
+                case 'crazy':
+                    printLine("--- 🚨 CLASSIFIED: CRAZY PKG DIRECTORY 🚨 ---", "#ff00ff");
+                    printLine("  sanket gigachad : Execute Protocol Chad.");
+                    printLine("  sanket sigma    : Engage Sigma Grindset.");
+                    printLine("  secret g++      : Access forbidden C++ knowledge.");
+                    printLine("  sankmux.pro     : Unlock Elite Theme Overlay.");
+                    printLine("  hack_nasa       : Level 9 clearance required.");
+                    break;
+
+                case 'chat':
+                    inChatMode = true;
+                    outputDiv.innerHTML = '';
+                    promptText.style.display = 'none';
+                    printLine("==================================================", "#00e5ff");
+                    printLine("       SANKMUX GLOBAL HACKER NETWORK v1.0         ", "#00e5ff");
+                    printLine("==================================================", "#00e5ff");
+                    printLine("[SYSTEM] Connecting to secure relay... [OK]");
+                    printLine("[SYSTEM] Bypassing proxy walls... [OK]");
+                    printLine("[SYSTEM] You have joined the global chat as 'Sanket'.");
+                    printLine("-> Type /exit to leave the chat <-", "#ff4444");
+                    printLine(" ");
+                    break;
+
+                case '5':
+                    const pkgs = getInstalledPackages();
+                    if (pkgs.length === 0) {
+                        printLine("No packages downloaded. Use 'pkg install <name>' first.");
+                    } else {
+                        const lastPkg = pkgs[pkgs.length - 1];
+                        inAppMode = true;
+                        currentApp = lastPkg;
+                        
+                        outputDiv.innerHTML = ''; 
+                        promptText.style.display = 'none'; 
+
+                        printLine(`Initializing ${lastPkg} interface...`);
+                        setTimeout(() => {
+                            const artDiv = document.createElement('div');
+                            artDiv.className = 'giant-art';
+                            
+                            if (lastPkg.toLowerCase() === 'sanket gigachad') {
+                                artDiv.textContent = gigachadArt;
+                            } else if (lastPkg.toLowerCase() === 'sanket sigma') {
+                                artDiv.textContent = sigmaArt;
+                            } else if (lastPkg.toLowerCase() === 'secret g++') {
+                                artDiv.textContent = secretGppArt;
+                            } else {
+                                artDiv.textContent = hackerArt;
+                            }
+                            
+                            outputDiv.appendChild(artDiv);
+
+                            printLine(generateAscii(lastPkg));
+                            printLine("==================================================");
+                            printLine(`[STATUS] ${lastPkg.toUpperCase()} is now running securely.`);
+                            printLine("[INFO] Type 'help' to see specific app commands.");
+                            printLine(" ");
+                            printLine("-> Type 7 to exit <-", "#ff4444");
+                            outputDiv.scrollTop = outputDiv.scrollHeight;
+                        }, 600);
+                    }
+                    return;
+
+                case 'clear':
+                    outputDiv.innerHTML = '';
+                    break;
+
+                case 'pwd':
+                    printLine(`/data/data/com.sankmux/files/home${currentPath.substring(1)}`);
+                    break;
+
+                case 'ls':
+                    const contents = directories[currentPath];
+                    if (contents && contents.length > 0) {
+                        printLine(contents.join("  "));
+                    }
+                    break;
+
+                case 'cd':
+                    const target = args[1];
+                    if (!target || target === '~') {
+                        currentPath = "~";
+                    } else if (target === "..") {
+                        if (currentPath !== "~") {
+                            currentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || "~";
+                        }
+                    } else {
+                        const newPath = currentPath === "~" ? `~/${target}` : `${currentPath}/${target}`;
+                        if (directories[newPath]) {
+                            currentPath = newPath;
+                        } else {
+                            printLine(`bash: cd: ${target}: No such file or directory`);
+                        }
+                    }
+                    updatePrompt();
+                    break;
+
+                case 'cat':
+                    const file = args[1];
+                    if (!file) {
+                        printLine("cat: missing operand");
+                        break;
+                    }
+                    const filePath = currentPath === "~" ? `~/${file}` : `${currentPath}/${file}`;
+                    if (fileContents[filePath]) {
+                        printLine(fileContents[filePath]);
+                    } else if (directories[filePath]) {
+                        printLine(`cat: ${file}: Is a directory`);
+                    } else {
+                        printLine(`cat: ${file}: No such file or directory`);
+                    }
+                    break;
+
+                case 'pkg':
+                    if (args[1] === 'install' && args[2]) {
+                        const pkgName = args.slice(2).join(" ");
+                        
+                        // --- GEAR DEPENDENCY LOGIC ---
+                        const crazyPkgsList = ['sanket gigachad', 'sanket sigma', 'secret g++', 'sankmux.pro', 'matrix', 'hack_nasa'];
+                        if (crazyPkgsList.includes(pkgName.toLowerCase())) {
+                            const currentInstalled = getInstalledPackages();
+                            if (!currentInstalled.includes('gear')) {
+                                printLine(`[ERROR] Missing core dependency: 'gear'`, "#ff4444");
+                                printLine(`Operation aborted. You must run 'pkg install gear' first.`, "#ff4444");
+                                return; 
+                            }
+                        }
+
+                        printLine(`Reading package lists... Done`);
+                        printLine(`Building dependency tree... Done`);
+                        
+                        savePackage(pkgName);
+
+                        setTimeout(() => printLine(`Get:1 https://sankmux.org/packages ${pkgName.replace(" ", "_")} [45.2 kB]`), 500);
+                        setTimeout(() => printLine(`Unpacking ${pkgName}...`), 1000);
+                        setTimeout(() => printLine(`Setting up ${pkgName} (1.0-4)...`), 1500);
+                        
+                        if (pkgName === 'sankmux.pro') {
+                            setTimeout(() => {
+                                printLine(`[***] SANKMUX.PRO AUTHENTICATED [***]`);
+                                printLine(`Injecting Elite Theme overlay...`);
+                                document.body.classList.add('pro-theme'); 
+                                printLine(`Processing triggers for man-db... Done`);
+                                printLine(`(Type 5 to launch sankmux.pro)`);
+                            }, 2000);
+                        } else {
+                            setTimeout(() => {
+                                printLine(`Processing triggers for man-db... Done`);
+                                if (pkgName !== 'gear') {
+                                    printLine(`(Type 5 to launch ${pkgName})`);
+                                }
+                            }, 2000);
+                        }
+                    } else if (args[1] === 'remove' && args[2]) {
+                        const pkgName = args.slice(2).join(" ");
+                        printLine(`Reading package lists... Done`);
+                        printLine(`Building dependency tree... Done`);
+                        setTimeout(() => removePkgLogic(pkgName), 800);
+                    } else if (args[1] === 'open' && args[2]) {
+                        // --- PKG OPEN LOGIC ---
+                        const targetPkg = args.slice(2).join(" ").toLowerCase();
+                        const pkgs = getInstalledPackages();
+                        const actualPkg = pkgs.find(p => p.toLowerCase() === targetPkg);
+
+                        if (actualPkg) {
+                            inAppMode = true;
+                            currentApp = actualPkg;
+                            
+                            outputDiv.innerHTML = ''; 
+                            promptText.style.display = 'none'; 
+
+                            printLine(`Initializing ${actualPkg} interface...`);
+                            setTimeout(() => {
+                                const artDiv = document.createElement('div');
+                                artDiv.className = 'giant-art';
+                                
+                                if (actualPkg.toLowerCase() === 'sanket gigachad') {
+                                    artDiv.textContent = gigachadArt;
+                                } else if (actualPkg.toLowerCase() === 'sanket sigma') {
+                                    artDiv.textContent = sigmaArt;
+                                } else if (actualPkg.toLowerCase() === 'secret g++') {
+                                    artDiv.textContent = secretGppArt;
+                                } else {
+                                    artDiv.textContent = hackerArt;
+                                }
+                                
+                                outputDiv.appendChild(artDiv);
+
+                                printLine(generateAscii(actualPkg));
+                                printLine("==================================================");
+                                printLine(`[STATUS] ${actualPkg.toUpperCase()} is now running securely.`);
+                                printLine("[INFO] Type 'help' to see specific app commands.");
+                                printLine(" ");
+                                printLine("-> Type 7 to exit <-", "#ff4444");
+                                outputDiv.scrollTop = outputDiv.scrollHeight;
+                            }, 600);
+                        } else {
+                            printLine(`[ERROR] Package '${args.slice(2).join(" ")}' is not installed.`, "#ff4444");
+                        }
+                    } else {
+                        printLine("Usage: pkg install <package> | pkg remove <package> | pkg open <package>");
+                    }
+                    break;
+
+                case 'remove':
+                    if (args[1] === 'all' && args[2] === 'pkgs') {
+                        printLine(`Initiating absolute purge protocol...`);
+                        setTimeout(() => removeAllPkgsLogic(), 1000);
+                    } else {
+                        printLine(`bash: remove: command not found (Did you mean 'remove all pkgs'?)`);
+                    }
+                    break;
+
+                case 'check':
+                    if (args[1] === 'all' && args[2] === 'pkgs') {
+                        const savedPkgs = getInstalledPackages();
+                        if (savedPkgs.length === 0) {
+                            printLine("No packages installed. (Cache is empty or expired)");
+                        } else {
+                            printLine("Installed Packages (Valid for 72 hours):");
+                            savedPkgs.forEach(pkg => {
+                                printLine(`  [*] ${pkg}`);
+                            });
+                        }
+                    } else {
+                        printLine(`bash: check: command not found`);
+                    }
+                    break;
+
+                case 'set':
+                    if (args[1] === 'to' && args[2] === 'mobile') {
+                        document.body.classList.add('mobile-mode');
+                        printLine("Viewport set to Mobile layout.");
+                    } else if (args[1] === 'to' && args[2] === 'laptop') {
+                        document.body.classList.remove('mobile-mode');
+                        printLine("Viewport set to Laptop layout.");
+                    } else {
+                        printLine("Usage: set to mobile | set to laptop");
+                    }
+                    break;
+
+                default:
+                    printLine(`bash: ${cmd}: command not found`);
+            }
+            
+            if(cmd !== 'clear' && cmd !== '5' && cmd !== 'chat') { printLine(" "); }
+        }
+
+        document.addEventListener('click', () => {
+            if (inputContainer.style.display === 'flex') {
+                commandInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
